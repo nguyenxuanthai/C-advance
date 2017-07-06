@@ -1,0 +1,44 @@
+#include <stdio.h>
+#include <stdlib.h>
+#include <time.h>
+#include <string.h>
+
+void swap(int *a, int *b);
+void qsort_2_ways(int arr[], int left, int right);
+
+
+//source code
+
+void swap(int *a, int *b) {
+  int tmp;
+  tmp = *a;
+  *a = *b;
+  *b = tmp;
+}
+
+void qsort_2_ways(int arr[], int left, int right) {
+  int i = left, j = right;
+  int tmp;
+  int pivot = arr[(left + right) / 2];
+ 
+  /* partition */
+  while (i <= j) {
+    while (arr[i] < pivot)
+      i++;
+    while (arr[j] > pivot)
+      j--;
+    if (i <= j) {
+      tmp = arr[i];
+      arr[i] = arr[j];
+      arr[j] = tmp;
+      i++;
+      j--;
+    }
+  };
+ 
+  /* recursion */
+  if (left < j)
+    qsort_2_ways(arr, left, j);
+  if (i < right)
+    qsort_2_ways(arr, i, right);
+}

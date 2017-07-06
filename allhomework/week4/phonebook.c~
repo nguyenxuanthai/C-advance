@@ -1,0 +1,251 @@
+#include<stdio.h>
+#include<string.h>
+#include<stdlib.h>
+#include"jrb.h"
+#include"jval.h"
+
+/*
+ File chua thong tin so dien thoai co ten phonebook.txt, duoc dinh dang nhu sau :
+- Dong dau luu so luong so dien thoai co trong danh sach.
+- Cac dong tiep theo, moi dong ghi theo cau truc : so_dien_thoai tab ten_nguoi_so_huu\n.
+*/
+int tong;
+
+void menu_phonebook()
+{
+  printf("\n===========================================================\n");
+  printf("================= CHUONG TRINH PHONE BOOK =================\n");
+  printf("===========================================================\n\n");
+  printf("\t1. Them so dien thoai.\n");
+  printf("\t2. Chinh sua so dien thoai.\n");
+  printf("\t3. Xoa so dien thoai.\n");
+  printf("\t4. In danh ba dien thoai.\n");
+  printf("\t5. Thoat.\n\n");
+  printf("=====> Nhap lua chon cua ban : ");
+}
+int luachon(void (*menu)(void ),int soluachon)
+{
+  int luachon;
+  do
+    {
+      menu();
+      while(scanf("%d",&luachon)!=1)
+	{
+	  while(getchar()!='\n');
+	  printf("  !!! Nhap sai! Hay nhap vao so tu 1 den %d!\n",soluachon);
+	  menu();
+	}
+      while(getchar()!='\n');
+      if(luachon<1||luachon>soluachon)
+	printf("  !!! Nhap sai! Hay nhap vao so tu 1 den %d!\n",soluachon);
+    }
+  while(luachon<1||luachon>soluachon);
+  return luachon;
+}
+
+int compare_s(Jval a,Jval b)
+{
+  return strcmp(a.s,b.s);
+}
+JRB add_entry(JRB roottree,char *phonenumber,char *name,int (*compare)(Jval ,Jval ))
+{
+  Jval val;
+  Jval key;
+  val.s=strdup(name);
+  key.s=strdup(phonenumber);
+  jrb_insert_gen(roottree,key,val,compare);
+  return roottree;
+}
+
+void print_phonebook(JRB roottree)
+{
+  JRB curtree;
+  if(roottree->parent==roottree)
+    {
+      printf("\n\tPhone book rong.\n");
+      return;
+    }
+  printf("\n\t\tDu lieu trong phone book la :\n");
+  printf("___________________________________________________________\n");
+  printf("\t\t%-20s%s\n","Phone number","Name");
+  printf("___________________________________________________________\n\n");
+  jrb_traverse(curtree,roottree)
+    printf("\t\t%-20s%s\n",curtree->key.s,curtree->val.s);
+  printf("-----------------------------------------------------------\n");
+}
+
+void delete_phonenumber(JRB roottree,char *key,int (*compare)(Jval ,Jval ))
+{
+  JRB curtree;
+  Jval k;
+  k.s=strdup(key);
+  curtree=jrb_find_gen(roottree,k,compare);
+  if(curtree==NULL)
+    printf("\nKhong ton tai so dien thoai %s trong danh ba.\n",key);
+  else
+    {
+      jrb_delete_node(curtree);
+      printf("\n\tXoa thanh cong.\n");
+      tong--;
+    }
+}
+
+char *nhap_phonenumber()
+{
+  char *tel1;
+  int kt=0;
+  tel1=(char*)malloc(15*sizeof(char));
+  do
+    {
+      kt=0;
+      printf("\nNhap vao so dien thoai: ");
+      scanf("%[^\n]%*c",tel1);
+      if(strlen(tel1)<10||strlen(tel1)>11)
+	{
+	  printf("\nSo khong hop le. Hay nhap lai.\n");
+	  kt=1;
+	}
+      else
+	{
+	  int i;
+	  if(tel1[0]!='0')
+	    {
+	      printf("\nSo khong hop le. Hay nhap lai.\n");
+	      kt=1;
+	    }
+	  else
+	    if(tel1[1]=='0')
+	      {
+		printf("\nSo khong hop le. Hay nhap lai.\n");
+		kt=1;
+	      }
+	    else
+	      for(i=2;i<strlen(tel1);i++)
+		if(tel1[i]<'0'||tel1[i]>'9')
+		  {
+		    printf("\nSo khong hop le. Hay nhap lai.\n");
+		    kt=1;
+		    break;
+		  }
+		else
+		  if(strcmp(tel1,"0100000000")<0||strcmp(tel1,"09999999999")>0)
+		    {
+		      printf("\nSo khong hop le. Hay nhap lai.\n");
+		      kt=1;
+		    }
+	}
+    }
+  while(kt==1);
+  return tel1;
+}
+
+int main()
+{
+  int l=0;
+  JRB root;
+  FILE *f;
+  char tel[15],name[30];
+  root=make_jrb();
+  f=fopen("phonebook.txt","r");
+  if(f==NULL)
+    {
+      printf("\tPhone book rong.\n");
+    }
+  else
+    {
+      fscanf(f,"%d\n",&tong);
+      while(!feof(f))
+	{
+	  fscanf(f,"%s\t%[^\n]\n",tel,name);
+	  add_entry(root,tel,name,compare_s);
+	}
+      fclose(f);
+      print_phonebook(root);
+    }
+  while(l!=5)
+    {
+      l=luachon(menu_phonebook,5);
+      switch(l)
+	{
+	case 1:
+	  {
+	    char *tel1,name1[30];
+	    Jval key1;
+	    printf("\n\tNhap thong tin so dien thoai va nguoi dung:\n");
+	    tel1=nhap_phonenumber();
+	    key1=new_jval_s(tel1);
+	    printf("\nNhap vao ten nguoi su dung: ");
+	    scanf("%[^\n]%*c",name1);
+	    if(jrb_find_gen(root,key1,compare_s)!=NULL)
+	      {
+		printf("\nDa ton tai so dien thoai %s trong phone book.\n",tel1);
+		break;
+	      }
+	    add_entry(root,tel1,name1,compare_s);
+	    tong++;
+	    free(tel1);
+	    printf("\n=====> Them thanh cong.\n");
+	    break;
+	  }
+	case 2:
+	  {
+	    JRB cur;
+	    Jval key1;
+	    char name1[30];
+	    printf("\n\tChinh sua ten nguoi su dung cua so dien thoai yeu cau.\n");
+	    if(root->parent==root)
+	      {
+		printf("\n\tPhone book rong.\n\n\tkhong the thuc hien chuc nang nay.\n");
+		break;
+		}
+	    key1.s=strdup(nhap_phonenumber());
+	    cur=jrb_find_gen(root,key1,compare_s);
+	    if(cur==NULL)
+	      {
+		printf("\nKhong ton tai so dien thoai %s trong danh ba.\n",key1.s);
+		break;
+	      }
+	    printf("\nNhap vao ten nguoi dung can doi cho so dien thoai %s : ",key1.s);
+	    scanf("%[^\n]%*c",name1);
+	    if(strcmp(cur->val.s,name1)==0)
+	      printf("\nBan da khong thay doi ten nguoi so huu so dien thoai %s.\n",key1.s);
+	    else
+	      {
+		cur->val.s=strdup(name1);
+		printf("\n\tThay doi thanh cong.\n");
+	      }
+	    break;
+	  }
+	case 3:
+	  {
+	    char key[15];
+	    printf("\n\tXoa so dien thoai yeu cau.\n");
+	    if(root->parent==root)
+	      {
+		printf("\n\tPhone book rong.\n\n\tKhong the thuc hien chuc nang nay.\n");
+		break;
+	      }
+	    delete_phonenumber(root,nhap_phonenumber(),compare_s);
+	    break;
+	  }
+	case 4:
+	  {
+	    print_phonebook(root);
+	    break;
+	  }
+	case 5:
+	  {
+	    printf("\n\tBYE BYE! SEE YOU AGAIN!\n\n");
+	    break;
+	  }
+	}
+    }
+  JRB cur;
+  f=fopen("phonebook.txt","w");
+  fprintf(f,"%d\n",tong);
+  jrb_traverse(cur,root)
+    fprintf(f,"%s\t%s\n",cur->key.s,cur->val.s);
+  fclose(f);
+  jrb_free_tree(root);
+  return 0;
+}

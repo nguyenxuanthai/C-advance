@@ -1,0 +1,26 @@
+void ghi_file_sou(BTA *root,char name[])
+{
+  FILE *f;
+  BTint in;
+  int rsize,i;
+  char *tu;
+  soundex *s;
+  tu=(char *)malloc(M*sizeof(char));
+  s=(soundex*)malloc(sizeof(soundex));
+  f=fopen(name,"w");
+  if(f==NULL)
+    {
+      printf("\n  Khong the mo file %s.\n",name);
+      return;
+    }
+  btpos(root,ZSTART);
+  while(bnxtky(root,tu,&in)==0)
+    {
+      btsel(root,tu,(char *)s,sizeof(soundex),&rsize);
+      for(i=0;i<s->count;i++)
+	fprintf(f,"%s\t%s\n",tu,s->word[i]);
+    }
+  free(tu);
+  free(s);
+  fclose(f);
+}
