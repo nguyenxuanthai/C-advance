@@ -1,0 +1,5 @@
+A524	angle
+B420	black
+I000	i
+M000	me
+M000	my
